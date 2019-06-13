@@ -5,6 +5,8 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using MongoDB.Bson;
+
 
 namespace MongoDbAggregateSample
 {
@@ -13,6 +15,11 @@ namespace MongoDbAggregateSample
 		static readonly Random _random = new Random();
 
 		const int _childPropertyCount = 20;
+
+		public class MyDataObjectExample: DataObjectExample
+		{
+			public ObjectId Id; 
+		}
 
 		async static Task Main()
 		{
@@ -30,14 +37,14 @@ namespace MongoDbAggregateSample
 
 			var client = GetMongoDbClient();
 			var database = client.GetDatabase("aggregate-demo");
-			var collection = database.GetCollection<DataObjectExample>("data-object-example");
+			var collection = database.GetCollection<MyDataObjectExample>("data-object-example");
 
 			await PopulateAsync(collection);
 
 			Query(collection);
 		}
 
-		static void Query(IMongoCollection<DataObjectExample> collection)
+		static void Query(IMongoCollection<MyDataObjectExample> collection)
 		{
 			var results = collection.AsQueryable().Where(m => m.SomeProperty >= 5 && m.SomeProperty <= 10);
 			var count = results.Count();
@@ -49,7 +56,7 @@ namespace MongoDbAggregateSample
 			}
 		}
 
-		async static Task PopulateAsync(IMongoCollection<DataObjectExample> collection, CancellationToken cancellationToken = default)
+		async static Task PopulateAsync(IMongoCollection<MyDataObjectExample> collection, CancellationToken cancellationToken = default)
 		{
 			var count = await collection.EstimatedDocumentCountAsync();
 			if (count > 0)
@@ -57,7 +64,7 @@ namespace MongoDbAggregateSample
 
 			for (var i = 0; i < 10; i++)
 			{
-				var dataObject = new DataObjectExample
+				var dataObject = new MyDataObjectExample
 				{
 					Details = new DataObjectInfo { Id = $"dataobject_{i + 1}" }
 				};
@@ -79,7 +86,7 @@ namespace MongoDbAggregateSample
 
 		static void ConfigureClassMap()
 		{
-			var t = typeof(DataObjectExample);
+			var t = typeof(MyDataObjectExample);
 
 			var classMap = new BsonClassMap(t);
 			classMap.AutoMap();
